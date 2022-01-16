@@ -39,12 +39,10 @@
 
     Private Rolls As List(Of Integer) = New List(Of Integer)
 
-    Private Sub DieConsoleControl_Layout(sender As Object, e As LayoutEventArgs) Handles MyBase.Layout
-        'Debug.WriteLine("Layout")
-    End Sub
-
     Private Sub DieConsoleControl_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Debug.WriteLine("Load")
+        lvCounts.SuspendLayout()
+        lvCounts.BeginUpdate()
+
         For i As Integer = 1 To Sides
             With lvCounts.Items.Add("")
                 .SubItems.Add(i)
@@ -53,21 +51,16 @@
             End With
             Rolls.Add(0)
         Next
+        lvCounts.EndUpdate()
+
         chRoll.Width = -2
-        lvCounts.PerformLayout()    ' update the column widths
+        lvCounts.PerformLayout()
         Dim Width As Integer = SystemInformation.VerticalScrollBarWidth
         For Each ch As ColumnHeader In lvCounts.Columns
             Width += ch.Width + 1
         Next
         lvCounts.Size = New Size(Width, DieControl1.Height)
-    End Sub
-
-    Private Sub DieConsoleControl_Resize(sender As Object, e As EventArgs) Handles MyBase.Resize
-        'Debug.WriteLine("ReSize")
-    End Sub
-
-    Private Sub DieConsoleControl_SizeChanged(sender As Object, e As EventArgs) Handles MyBase.SizeChanged
-        'Debug.WriteLine("SizeChanged")
+        lvCounts.ResumeLayout()
     End Sub
 
     Private Sub btnRoll_Click(sender As Object, e As EventArgs) Handles btnRoll.Click

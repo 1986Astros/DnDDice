@@ -10,19 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Form4-6.vb" />
-    <Compile Remove="Form6.vb" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Import Include="System.Data" />
     <Import Include="System.Drawing" />
     <Import Include="System.Windows.Forms" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Form4-6.vb" />
-    <None Include="Form6.vb" />
   </ItemGroup>
 
   <ItemGroup>

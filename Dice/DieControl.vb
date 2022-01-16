@@ -31,6 +31,8 @@
     End Property
     Private shhValue As Integer = 6
 
+    'Public Property FadeLines As Boolean      ' todo: most if not all can be done by drawing the same shape rotate in dotted lines before drawing the forefaces
+
     Public Sub Clear()
         If Value <> 0 Then
             Value = 0
