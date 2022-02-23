@@ -17,6 +17,15 @@
             DieControl1.Value = value
         End Set
     End Property
+    Public Property DrawHiddenEdges As Boolean
+        Get
+            Return DieControl1.DrawHiddenEdges
+        End Get
+        Set(value As Boolean)
+            DieControl1.DrawHiddenEdges = value
+        End Set
+    End Property
+    Private shhDrawHiddenEdges As Boolean = True
     Public Property DieSize As Size
         Get
             Return DieControl1.Size
