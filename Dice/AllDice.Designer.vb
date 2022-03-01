@@ -61,13 +61,17 @@ Partial Class AllDice
         Me.DieConsoleControl1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl1.DieFont = New System.Drawing.Font("Segoe UI", 21.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl1.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl1.DrawHiddenEdges = True
+        Me.DieConsoleControl1.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl1.FaceColor = System.Drawing.Color.Peru
+        Me.DieConsoleControl1.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl1.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl1.Location = New System.Drawing.Point(3, 3)
         Me.DieConsoleControl1.Name = "DieConsoleControl1"
         Me.DieConsoleControl1.Sides = 20
-        Me.DieConsoleControl1.Size = New System.Drawing.Size(2, 2)
+        Me.DieConsoleControl1.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl1.TabIndex = 0
         Me.DieConsoleControl1.Value = 20
+        Me.DieConsoleControl1.ValueColor = System.Drawing.Color.White
         '
         'DieConsoleControl2
         '
@@ -76,13 +80,17 @@ Partial Class AllDice
         Me.DieConsoleControl2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl2.DieFont = New System.Drawing.Font("Segoe UI", 36.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl2.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl2.DrawHiddenEdges = True
+        Me.DieConsoleControl2.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl2.FaceColor = System.Drawing.Color.Black
+        Me.DieConsoleControl2.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl2.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl2.Location = New System.Drawing.Point(336, 3)
         Me.DieConsoleControl2.Name = "DieConsoleControl2"
         Me.DieConsoleControl2.Sides = 12
         Me.DieConsoleControl2.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl2.TabIndex = 1
         Me.DieConsoleControl2.Value = 12
+        Me.DieConsoleControl2.ValueColor = System.Drawing.Color.White
         '
         'DieConsoleControl3
         '
@@ -91,13 +99,17 @@ Partial Class AllDice
         Me.DieConsoleControl3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl3.DieFont = New System.Drawing.Font("Segoe UI", 26.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl3.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl3.DrawHiddenEdges = True
+        Me.DieConsoleControl3.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl3.FaceColor = System.Drawing.Color.DarkOrange
+        Me.DieConsoleControl3.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl3.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl3.Location = New System.Drawing.Point(668, 3)
         Me.DieConsoleControl3.Name = "DieConsoleControl3"
         Me.DieConsoleControl3.Sides = 10
         Me.DieConsoleControl3.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl3.TabIndex = 2
         Me.DieConsoleControl3.Value = 10
+        Me.DieConsoleControl3.ValueColor = System.Drawing.Color.White
         '
         'DieConsoleControl4
         '
@@ -106,13 +118,17 @@ Partial Class AllDice
         Me.DieConsoleControl4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl4.DieFont = New System.Drawing.Font("Segoe UI", 48.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl4.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl4.DrawHiddenEdges = True
+        Me.DieConsoleControl4.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl4.FaceColor = System.Drawing.Color.MediumOrchid
+        Me.DieConsoleControl4.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl4.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl4.Location = New System.Drawing.Point(3, 227)
         Me.DieConsoleControl4.Name = "DieConsoleControl4"
         Me.DieConsoleControl4.Sides = 8
         Me.DieConsoleControl4.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl4.TabIndex = 3
         Me.DieConsoleControl4.Value = 8
+        Me.DieConsoleControl4.ValueColor = System.Drawing.Color.White
         '
         'DieConsoleControl5
         '
@@ -121,13 +137,17 @@ Partial Class AllDice
         Me.DieConsoleControl5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl5.DieFont = New System.Drawing.Font("Segoe UI", 48.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl5.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl5.DrawHiddenEdges = True
+        Me.DieConsoleControl5.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl5.FaceColor = System.Drawing.Color.YellowGreen
+        Me.DieConsoleControl5.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl5.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl5.Location = New System.Drawing.Point(336, 227)
         Me.DieConsoleControl5.Name = "DieConsoleControl5"
         Me.DieConsoleControl5.Sides = 6
         Me.DieConsoleControl5.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl5.TabIndex = 4
         Me.DieConsoleControl5.Value = 6
+        Me.DieConsoleControl5.ValueColor = System.Drawing.Color.White
         '
         'DieConsoleControl6
         '
@@ -136,13 +156,17 @@ Partial Class AllDice
         Me.DieConsoleControl6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
         Me.DieConsoleControl6.DieFont = New System.Drawing.Font("Segoe UI", 48.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point)
         Me.DieConsoleControl6.DieSize = New System.Drawing.Size(150, 150)
-        Me.DieConsoleControl6.DrawHiddenEdges = True
+        Me.DieConsoleControl6.EdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl6.FaceColor = System.Drawing.Color.Red
+        Me.DieConsoleControl6.HiddenEdgeColor = System.Drawing.Color.White
+        Me.DieConsoleControl6.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl6.Location = New System.Drawing.Point(668, 227)
         Me.DieConsoleControl6.Name = "DieConsoleControl6"
         Me.DieConsoleControl6.Sides = 4
         Me.DieConsoleControl6.Size = New System.Drawing.Size(301, 189)
         Me.DieConsoleControl6.TabIndex = 5
         Me.DieConsoleControl6.Value = 4
+        Me.DieConsoleControl6.ValueColor = System.Drawing.Color.White
         '
         'AllDice
         '

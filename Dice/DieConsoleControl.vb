@@ -1,5 +1,7 @@
-﻿Public Class DieConsoleControl
+﻿Imports System.ComponentModel
 
+Public Class DieConsoleControl
+    <Category("Die Appearance")>
     Public Property Sides As Integer
         Get
             Return DieControl1.Sides
@@ -9,6 +11,7 @@
             DieControl1.Value = value
         End Set
     End Property
+    <Category("Die Appearance")>
     Public Property Value As Integer
         Get
             Return DieControl1.Value
@@ -17,15 +20,7 @@
             DieControl1.Value = value
         End Set
     End Property
-    Public Property DrawHiddenEdges As Boolean
-        Get
-            Return DieControl1.DrawHiddenEdges
-        End Get
-        Set(value As Boolean)
-            DieControl1.DrawHiddenEdges = value
-        End Set
-    End Property
-    Private shhDrawHiddenEdges As Boolean = True
+    <Category("Die Appearance")>
     Public Property DieSize As Size
         Get
             Return DieControl1.Size
@@ -37,12 +32,82 @@
             End If
         End Set
     End Property
+    <Category("Die Appearance")>
     Public Property DieFont As Font
         Get
             Return DieControl1.Font
         End Get
         Set(value As Font)
             DieControl1.Font = value
+        End Set
+    End Property
+
+    <DefaultValue(GetType(Color), "White")> <Category("Die Appearance")>
+    Public Property FaceColor As Color
+        Get
+            Return DieControl1.FaceColor
+        End Get
+        Set(value As Color)
+            DieControl1.FaceColor = value
+        End Set
+    End Property
+
+    <DefaultValue(GetType(Color), "Black")> <Category("Die Appearance")>
+    Public Property EdgeColor As Color
+        Get
+            Return DieControl1.EdgeColor
+        End Get
+        Set(value As Color)
+            DieControl1.EdgeColor = value
+        End Set
+    End Property
+
+    <DefaultValue(1.0!)> <Category("Die Appearance")>
+    Public Property EdgeWeight As Single
+        Get
+            Return DieControl1.EdgeWeight
+        End Get
+        Set(value As Single)
+            DieControl1.EdgeWeight = value
+        End Set
+    End Property
+    <DefaultValue(True)> <Category("Die Appearance")>
+    Public Property DrawHiddenEdges As Boolean
+        Get
+            Return DieControl1.DrawHiddenEdges
+        End Get
+        Set(value As Boolean)
+            DieControl1.DrawHiddenEdges = value
+        End Set
+    End Property
+
+    <DefaultValue(GetType(Color), "Black")> <Category("Die Appearance")>
+    Public Property HiddenEdgeColor As Color
+        Get
+            Return DieControl1.HiddenEdgeColor
+        End Get
+        Set(value As Color)
+            DieControl1.HiddenEdgeColor = value
+        End Set
+    End Property
+
+    <DefaultValue(1.0!)> <Category("Die Appearance")>
+    Public Property HiddenEdgeWeight As Single
+        Get
+            Return DieControl1.HiddenEdgeWeight
+        End Get
+        Set(value As Single)
+            DieControl1.HiddenEdgeWeight = value
+        End Set
+    End Property
+
+    <DefaultValue(GetType(Color), "Black")> <Category("Die Appearance")>
+    Public Property ValueColor As Color
+        Get
+            Return DieControl1.ValueColor
+        End Get
+        Set(value As Color)
+            DieControl1.ValueColor = value
         End Set
     End Property
 
