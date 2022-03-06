@@ -23,6 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Images\8-sided-1.psd" />
+    <None Remove="Images\8-sided-2.psd" />
+    <None Remove="Images\bad images of DnD dice.psd" />
+    <None Remove="Images\decahedron.psd" />
+    <None Remove="Images\dodecahedron.psd" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Import Include="System.Data" />
     <Import Include="System.Drawing" />
     <Import Include="System.Windows.Forms" />
