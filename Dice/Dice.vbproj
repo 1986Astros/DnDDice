@@ -7,6 +7,7 @@
     <StartupObject>Dice.AllDice</StartupObject>
     <UseWindowsForms>true</UseWindowsForms>
     <MyType>WindowsForms</MyType>
+    <ApplicationIcon>Images\Dice.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +20,14 @@
   <ItemGroup>
     <EmbeddedResource Remove="Form4-6.resx" />
     <EmbeddedResource Remove="Form6.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Images\8-sided-1.psd" />
+    <None Remove="Images\8-sided-2.psd" />
+    <None Remove="Images\bad images of DnD dice.psd" />
+    <None Remove="Images\decahedron.psd" />
+    <None Remove="Images\dodecahedron.psd" />
   </ItemGroup>
 
   <ItemGroup>

@@ -22,6 +22,7 @@ Partial Class AllDice
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(AllDice))
         Me.tlpAllDice = New System.Windows.Forms.TableLayoutPanel()
         Me.DieConsoleControl1 = New Dice.DieConsoleControl()
         Me.DieConsoleControl2 = New Dice.DieConsoleControl()
@@ -51,7 +52,7 @@ Partial Class AllDice
         Me.tlpAllDice.RowCount = 2
         Me.tlpAllDice.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.tlpAllDice.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.tlpAllDice.Size = New System.Drawing.Size(999, 449)
+        Me.tlpAllDice.Size = New System.Drawing.Size(999, 476)
         Me.tlpAllDice.TabIndex = 0
         '
         'DieConsoleControl1
@@ -67,8 +68,10 @@ Partial Class AllDice
         Me.DieConsoleControl1.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl1.Location = New System.Drawing.Point(3, 3)
         Me.DieConsoleControl1.Name = "DieConsoleControl1"
+        Me.DieConsoleControl1.RollAnimationInterval = 1000
+        Me.DieConsoleControl1.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.HorizontalAxis
         Me.DieConsoleControl1.Sides = 20
-        Me.DieConsoleControl1.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl1.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl1.TabIndex = 0
         Me.DieConsoleControl1.Value = 20
         Me.DieConsoleControl1.ValueColor = System.Drawing.Color.White
@@ -86,8 +89,10 @@ Partial Class AllDice
         Me.DieConsoleControl2.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl2.Location = New System.Drawing.Point(336, 3)
         Me.DieConsoleControl2.Name = "DieConsoleControl2"
+        Me.DieConsoleControl2.RollAnimationInterval = 1000
+        Me.DieConsoleControl2.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.HorizontalAxis
         Me.DieConsoleControl2.Sides = 12
-        Me.DieConsoleControl2.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl2.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl2.TabIndex = 1
         Me.DieConsoleControl2.Value = 12
         Me.DieConsoleControl2.ValueColor = System.Drawing.Color.White
@@ -105,8 +110,10 @@ Partial Class AllDice
         Me.DieConsoleControl3.HiddenEdgeWeight = 1.5!
         Me.DieConsoleControl3.Location = New System.Drawing.Point(668, 3)
         Me.DieConsoleControl3.Name = "DieConsoleControl3"
+        Me.DieConsoleControl3.RollAnimationInterval = 1000
+        Me.DieConsoleControl3.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.Fade
         Me.DieConsoleControl3.Sides = 10
-        Me.DieConsoleControl3.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl3.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl3.TabIndex = 2
         Me.DieConsoleControl3.Value = 10
         Me.DieConsoleControl3.ValueColor = System.Drawing.Color.White
@@ -122,10 +129,12 @@ Partial Class AllDice
         Me.DieConsoleControl4.FaceColor = System.Drawing.Color.MediumOrchid
         Me.DieConsoleControl4.HiddenEdgeColor = System.Drawing.Color.White
         Me.DieConsoleControl4.HiddenEdgeWeight = 1.5!
-        Me.DieConsoleControl4.Location = New System.Drawing.Point(3, 227)
+        Me.DieConsoleControl4.Location = New System.Drawing.Point(3, 241)
         Me.DieConsoleControl4.Name = "DieConsoleControl4"
+        Me.DieConsoleControl4.RollAnimationInterval = 1000
+        Me.DieConsoleControl4.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.HorizontalAxis
         Me.DieConsoleControl4.Sides = 8
-        Me.DieConsoleControl4.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl4.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl4.TabIndex = 3
         Me.DieConsoleControl4.Value = 8
         Me.DieConsoleControl4.ValueColor = System.Drawing.Color.White
@@ -141,10 +150,12 @@ Partial Class AllDice
         Me.DieConsoleControl5.FaceColor = System.Drawing.Color.YellowGreen
         Me.DieConsoleControl5.HiddenEdgeColor = System.Drawing.Color.White
         Me.DieConsoleControl5.HiddenEdgeWeight = 1.5!
-        Me.DieConsoleControl5.Location = New System.Drawing.Point(336, 227)
+        Me.DieConsoleControl5.Location = New System.Drawing.Point(336, 241)
         Me.DieConsoleControl5.Name = "DieConsoleControl5"
+        Me.DieConsoleControl5.RollAnimationInterval = 1000
+        Me.DieConsoleControl5.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.VerticalAxis
         Me.DieConsoleControl5.Sides = 6
-        Me.DieConsoleControl5.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl5.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl5.TabIndex = 4
         Me.DieConsoleControl5.Value = 6
         Me.DieConsoleControl5.ValueColor = System.Drawing.Color.White
@@ -160,10 +171,12 @@ Partial Class AllDice
         Me.DieConsoleControl6.FaceColor = System.Drawing.Color.Red
         Me.DieConsoleControl6.HiddenEdgeColor = System.Drawing.Color.White
         Me.DieConsoleControl6.HiddenEdgeWeight = 1.5!
-        Me.DieConsoleControl6.Location = New System.Drawing.Point(668, 227)
+        Me.DieConsoleControl6.Location = New System.Drawing.Point(668, 241)
         Me.DieConsoleControl6.Name = "DieConsoleControl6"
+        Me.DieConsoleControl6.RollAnimationInterval = 1000
+        Me.DieConsoleControl6.RollAnimationStyle = Dice.DieControl.RollAnimationStyles.None
         Me.DieConsoleControl6.Sides = 4
-        Me.DieConsoleControl6.Size = New System.Drawing.Size(301, 189)
+        Me.DieConsoleControl6.Size = New System.Drawing.Size(301, 213)
         Me.DieConsoleControl6.TabIndex = 5
         Me.DieConsoleControl6.Value = 4
         Me.DieConsoleControl6.ValueColor = System.Drawing.Color.White
@@ -172,10 +185,11 @@ Partial Class AllDice
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1005, 445)
+        Me.ClientSize = New System.Drawing.Size(1005, 512)
         Me.Controls.Add(Me.tlpAllDice)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "AllDice"
-        Me.Text = "AllDice"
+        Me.Text = "All Dice"
         Me.tlpAllDice.ResumeLayout(False)
         Me.tlpAllDice.PerformLayout()
         Me.ResumeLayout(False)
