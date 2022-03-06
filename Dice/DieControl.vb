@@ -1,25 +1,21 @@
 ﻿Imports System.ComponentModel
 
+#Const DebugAnimation = False
 Public Class DieControl
-    Public Sub New()
-        InitializeComponent()
-
-        MeasureFont()
-        CreateValueRectangle()
-    End Sub
     Private Sub DieControl_Load(sender As Object, e As EventArgs) Handles Me.Load
+        MeasureFont()
+        CreateValueRectangles()
         Initialized = True
     End Sub
     Private Initialized As Boolean = False
 
-    Private ValueRectangle As RectangleF    ' where to paint the current die value
     Private ValueInvalidationRectangle As RectangleF    ' what to invalidate - just the glyph
     Private ValueRenderingRectangle As Rectangle        ' location for TextRenderer.DrawText
     Private ValueFontAscent As Single
     Private ValueFontDescent As Single
     Private ReadOnly rnd As Random = New Random
 
-    Private Sub CreateValueRectangle()
+    Private Sub CreateValueRectangles()
         Dim MeasureCharsStringFormat As StringFormat = New StringFormat()
         Dim Ranges As List(Of CharacterRange) = New List(Of CharacterRange)
         Dim LastStartPosition As Integer = 0
@@ -31,7 +27,7 @@ Public Class DieControl
         Using g As Graphics = CreateGraphics()
             g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 
-            ' Note: Since the text is render by TextRenderer, this will possibly miscalculate.
+            ' measure the sizes of all the possible values and get the widest one
             Dim LargestRgn As Region = g.MeasureCharacterRanges(
                 Enumerable.Range(1, Sides).Aggregate(Of String)("", Function(ag, s) ag & s),
                 Me.Font,
@@ -62,6 +58,15 @@ Public Class DieControl
         ValueFontAscent = FontSize * FontFamily.GetCellAscent(FontStyle) / FontEmHeight
         ValueFontDescent = FontSize * FontFamily.GetCellDescent(FontStyle) / FontEmHeight
     End Sub
+
+#Region "Properties"
+    Public Enum RollAnimationStyles
+        None
+        VerticalAxis
+        HorizontalAxis
+        Fade
+        Spin
+    End Enum
 
     <Category("Die Appearance")>
     Public Property Sides As Integer
@@ -199,6 +204,23 @@ Public Class DieControl
     End Property
     Private shhValueColor As Color = Color.Black
 
+    <DefaultValue(GetType(RollAnimationStyles), "RollAnimationStyles.None")> <Category("Die Appearance")> <Description("Type of animation when the die changes value")>
+    Public Property RollAnimationStyle As RollAnimationStyles
+        Get
+            Return shhRollAnimationStyle
+        End Get
+        Set(value As RollAnimationStyles)
+            shhRollAnimationStyle = value
+        End Set
+    End Property
+    Private shhRollAnimationStyle As RollAnimationStyles = RollAnimationStyles.None
+    Private RollAnimationCurrent As RollAnimationStyles = RollAnimationStyles.None
+    <DefaultValue(500)> <Category("Die Appearance")> <Description("Length of roll aimation in miliseconds")>
+    Public Property RollAnimationInterval As Integer = 500
+
+    Private ValueAnimationList As List(Of Bitmap) = New List(Of Bitmap)
+#End Region
+
     Public Sub Clear()
         If Value <> 0 Then
             Value = 0
@@ -206,8 +228,21 @@ Public Class DieControl
         End If
     End Sub
 
-    Public Function Roll() As Integer
-        Value = rnd.Next(1, Sides + 1)
+    Public Function Roll(Optional InvalidateDie As Boolean = True) As Integer
+        If InvalidateDie Then
+            Dim NewValue As Integer = rnd.Next(1, Sides + 1)
+            RollAnimationCurrent = RollAnimationStyle
+            Select Case RollAnimationCurrent
+                Case RollAnimationStyles.None
+                    Value = NewValue
+                Case RollAnimationStyles.VerticalAxis, RollAnimationStyles.HorizontalAxis, RollAnimationStyles.Fade, RollAnimationStyles.Spin
+                    ' When there are multiple rolls before animation, shhValue is usually not the value showing on the die at the outset of animation
+                    CreateValueAxisList(shhValue, NewValue)
+                    shhValue = NewValue
+            End Select
+        Else
+            Value = rnd.Next(1, Sides + 1)
+        End If
         Return Value
     End Function
 
@@ -217,33 +252,295 @@ Public Class DieControl
     End Function
 
     Private Sub DieControl_Paint(sender As Object, e As PaintEventArgs) Handles MyBase.Paint
-        Dim BoundingRectangle As Rectangle = New Rectangle(0, 0, Me.Width, Me.Height)
-        Dim gs As Drawing2D.GraphicsState = e.Graphics.Save
-        e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
-        e.Graphics.InterpolationMode = Drawing2D.InterpolationMode.High
-        Select Case Sides
-            Case 4
-                Paint4Sides(e.Graphics)
-            Case 6
-                Paint6Sides(e.Graphics)
-            Case 8
-                Paint8Sides(e.Graphics)
-            Case 10
-                Paint10Sides(e.Graphics)
-            Case 12
-                Paint12Sides(e.Graphics)
-            Case 20
-                Paint20Sides(e.Graphics)
-        End Select
-        CreateValueRectangle()
-
-        If Value <> 0 Then
-            e.Graphics.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
-            Dim tff As TextFormatFlags = TextFormatFlags.HorizontalCenter Or TextFormatFlags.VerticalCenter Or TextFormatFlags.NoClipping Or TextFormatFlags.NoPadding Or TextFormatFlags.TextBoxControl
-            TextRenderer.DrawText(e.Graphics, Value, Me.Font, ValueRenderingRectangle, ValueColor, tff)
+        DoPaint(e.Graphics)
+    End Sub
+    Private Sub DoPaint(g As Graphics)
+        Dim gs As Drawing2D.GraphicsState = g.Save
+        If RollAnimationCurrent = RollAnimationStyles.None Then
+            ' Animation happens after this is executed at least once.
+            Dim BoundingRectangle As Rectangle = New Rectangle(0, 0, Me.Width, Me.Height)
+            g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+            g.InterpolationMode = Drawing2D.InterpolationMode.High
+            PaintTheDie(g)
+            CreateValueRectangles()
         End If
 
-        e.Graphics.Restore(gs)
+        If Value <> 0 Then
+            g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+            Using ValueBrush As Brush = New SolidBrush(ValueColor)
+                g.DrawString(Value, Me.Font, ValueBrush, New RectangleF(ValueRenderingRectangle.Left - ValueRenderingRectangle.Width, ValueRenderingRectangle.Top, 3 * ValueRenderingRectangle.Width, ValueRenderingRectangle.Height), New StringFormat With {.Alignment = StringAlignment.Center, .LineAlignment = StringAlignment.Center})
+            End Using
+        End If
+
+        g.Restore(gs)
+    End Sub
+    Private Sub PaintTheDie(g As Graphics)
+        ' If speed were an issue here, this could be done with Delegates.
+        Select Case Sides
+            Case 4
+                Paint4Sides(g)
+            Case 6
+                Paint6Sides(g)
+            Case 8
+                Paint8Sides(g)
+            Case 10
+                Paint10Sides(g)
+            Case 12
+                Paint12Sides(g)
+            Case 20
+                Paint20Sides(g)
+        End Select
+    End Sub
+    Private Sub CreateValueAxisList(OldValue As Integer, NewValue As Integer)
+        Dim BackgroundBitmap As Bitmap      ' the slice of the die behind the numeral
+        ValueAnimationList.Clear()
+        Using FaceBrush As Brush = New SolidBrush(FaceColor)
+            With GetBoundingRectangle()
+                Using EntireDie As Bitmap = New Bitmap(Width, Height, Imaging.PixelFormat.Format32bppRgb)
+                    Using g As Graphics = Graphics.FromImage(EntireDie)
+                        Using BgBrush As Brush = New SolidBrush(BackColor)
+                            g.FillRectangle(BgBrush, New Rectangle(Point.Empty, EntireDie.Size))
+                        End Using
+                        EntireDie.Save(IO.Path.Combine(Application.StartupPath, "BackColor.bmp"), Imaging.ImageFormat.Bmp)
+                        PaintTheDie(g)
+                    End Using
+#If DebugAnimation Then
+                    EntireDie.Save(IO.Path.Combine(Application.StartupPath, "EntireDie.bmp"), Imaging.ImageFormat.Bmp)
+#End If
+                    BackgroundBitmap = New Bitmap(ValueRenderingRectangle.Width, ValueRenderingRectangle.Height, Imaging.PixelFormat.Format32bppRgb)
+                    Using g As Graphics = Graphics.FromImage(BackgroundBitmap)
+                        g.DrawImage(EntireDie, 0, 0, ValueRenderingRectangle, GraphicsUnit.Pixel)
+                    End Using
+#If DebugAnimation Then
+                    BackgroundBitmap.Save(IO.Path.Combine(Application.StartupPath, "BackgroundBitmap.bmp"), Imaging.ImageFormat.Bmp)
+#End If
+                End Using
+            End With
+        End Using
+        Using TargetBitmap As Bitmap = New Bitmap(ValueRenderingRectangle.Width, ValueRenderingRectangle.Height, Imaging.PixelFormat.Format32bppRgb)
+            Dim tff As TextFormatFlags = TextFormatFlags.HorizontalCenter Or TextFormatFlags.VerticalCenter Or TextFormatFlags.NoClipping Or TextFormatFlags.NoPadding Or TextFormatFlags.TextBoxControl
+            Using SourceBitmap As Bitmap = BackgroundBitmap.Clone
+                If OldValue > 0 Then
+                    Using g As Graphics = Graphics.FromImage(SourceBitmap)
+                        g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+                        Using ValueBrush As Brush = New SolidBrush(ValueColor)
+                            ' drawn in a wide rectangle to eliminate text wrapping
+                            g.DrawString(OldValue, Font, ValueBrush, New Rectangle(-ValueRenderingRectangle.Width, 0, 3 * ValueRenderingRectangle.Width, ValueRenderingRectangle.Height), New StringFormat With {.Alignment = StringAlignment.Center, .LineAlignment = StringAlignment.Center})
+                        End Using
+                    End Using
+#If DebugAnimation Then
+          SourceBitmap.Save(IO.Path.Combine(Application.StartupPath, "SourceBitmap.bmp"), Imaging.ImageFormat.Bmp)
+#End If
+                    Using g As Graphics = Graphics.FromImage(TargetBitmap)
+                        Select Case RollAnimationStyle
+                            Case RollAnimationStyles.VerticalAxis
+                                For i As Integer = 1 To ValueRenderingRectangle.Width \ 2
+                                    g.DrawImage(BackgroundBitmap, Point.Empty)
+                                    g.DrawImage(SourceBitmap,
+                                            New Rectangle(i, 0, ValueRenderingRectangle.Width - 2 * i, ValueRenderingRectangle.Height),
+                                            0, 0, ValueRenderingRectangle.Width, ValueRenderingRectangle.Height, GraphicsUnit.Pixel)
+                                    ValueAnimationList.Add(TargetBitmap.Clone)
+                                Next
+                            Case RollAnimationStyles.HorizontalAxis
+                                Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                                For i As Integer = 1 To ValueInvalidationRectangle.Height \ 2
+                                    g.DrawImage(BackgroundBitmap, Point.Empty)
+                                    g.DrawImage(SourceBitmap,
+                                        New RectangleF(0, SourceRectangle.Top + i, SourceRectangle.Width, SourceRectangle.Height - 2 * i),
+                                        SourceRectangle, GraphicsUnit.Pixel)
+                                    ValueAnimationList.Add(TargetBitmap.Clone)
+                                Next
+                            Case RollAnimationStyles.Fade
+                                ' https://www.daniweb.com/programming/software-development/threads/358892/set-transparency-of-a-bitmap-in-vb-using-trackbar
+                                Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                                Dim ColorVector As Single()() = {
+                                    New Single() {1, 0, 0, 0, 0},
+                                    New Single() {0, 1, 0, 0, 0},
+                                    New Single() {0, 0, 1, 0, 0},
+                                    New Single() {0, 0, 0, 1, 0},
+                                    New Single() {0, 0, 0, 0, 1}}
+                                Dim ImageAttr As Imaging.ImageAttributes = New Imaging.ImageAttributes
+                                Dim ColorMtrx As Imaging.ColorMatrix = New Imaging.ColorMatrix(ColorVector)
+                                For i As Integer = 254 To 0 Step -5
+                                    ColorMtrx.Matrix33 = CSng(i) / 255.0!   ' alpha element
+                                    ImageAttr.SetColorMatrix(ColorMtrx, Imaging.ColorMatrixFlag.Default, Imaging.ColorAdjustType.Bitmap)
+                                    g.DrawImage(BackgroundBitmap, Point.Empty)
+                                    g.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                        SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                        GraphicsUnit.Pixel, ImageAttr)
+                                    ValueAnimationList.Add(TargetBitmap.Clone)
+                                Next
+                                g.DrawImage(BackgroundBitmap, Point.Empty)
+                                ValueAnimationList.Add(TargetBitmap.Clone)
+                            Case RollAnimationStyles.Spin
+                                Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                                Dim ColorVector As Single()() = {
+                                    New Single() {1, 0, 0, 0, 0},
+                                    New Single() {0, 1, 0, 0, 0},
+                                    New Single() {0, 0, 1, 0, 0},
+                                    New Single() {0, 0, 0, 1, 0},
+                                    New Single() {0, 0, 0, 0, 1}}
+                                Dim ImageAttr As Imaging.ImageAttributes = New Imaging.ImageAttributes
+                                Dim ColorMtrx As Imaging.ColorMatrix = New Imaging.ColorMatrix(ColorVector)
+                                Dim gs As Drawing2D.GraphicsState
+                                Dim m As Drawing2D.Matrix = New Drawing2D.Matrix
+                                Dim MidPoint As PointF = New PointF(SourceRectangle.Left + SourceRectangle.Width / 2.0!, SourceRectangle.Top + SourceRectangle.Height / 2.0!)
+                                SourceBitmap.MakeTransparent(FaceColor)
+                                For i As Integer = 0 To 360 Step 10
+                                    gs = g.Save
+                                    ColorMtrx.Matrix33 = CSng(360 - i) / 360.0!
+                                    ImageAttr.SetColorMatrix(ColorMtrx, Imaging.ColorMatrixFlag.Default, Imaging.ColorAdjustType.Bitmap)
+                                    g.DrawImage(BackgroundBitmap, Point.Empty)
+                                    m.Reset()
+                                    m.RotateAt(i, MidPoint)
+                                    g.Transform = m
+                                    g.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                                SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                                GraphicsUnit.Pixel, ImageAttr)
+                                    ValueAnimationList.Add(TargetBitmap.Clone)
+                                    g.Restore(gs)
+                                Next
+                        End Select
+                    End Using
+                End If
+                If OldValue <> NewValue Then
+                    Using g As Graphics = Graphics.FromImage(SourceBitmap)
+                        g.DrawImage(BackgroundBitmap, Point.Empty)
+
+                        g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+                        Using ValueBrush As Brush = New SolidBrush(ValueColor)
+                            g.DrawString(NewValue, Font, ValueBrush, New Rectangle(-ValueRenderingRectangle.Width, 0, 3 * ValueRenderingRectangle.Width, ValueRenderingRectangle.Height), New StringFormat With {.Alignment = StringAlignment.Center, .LineAlignment = StringAlignment.Center})
+                        End Using
+                    End Using
+                End If
+#If DebugAnimation Then
+       SourceBitmap.Save(IO.Path.Combine(Application.StartupPath, "TargetBitmap.bmp"), Imaging.ImageFormat.Bmp)
+#End If
+                Using g As Graphics = Graphics.FromImage(TargetBitmap)
+                    Select Case RollAnimationStyle
+                        Case RollAnimationStyles.VerticalAxis
+                            For i As Integer = ValueRenderingRectangle.Width \ 2 To 0 Step -1
+                                g.DrawImage(BackgroundBitmap, Point.Empty)
+                                g.DrawImage(SourceBitmap,
+                                        New Rectangle(i, 0, ValueRenderingRectangle.Width - 2 * i, ValueRenderingRectangle.Height),
+                                        0, 0, ValueRenderingRectangle.Width, ValueRenderingRectangle.Height, GraphicsUnit.Pixel)
+                                ValueAnimationList.Add(TargetBitmap.Clone)
+                            Next
+                        Case RollAnimationStyles.HorizontalAxis
+                            Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                            For i As Integer = ValueInvalidationRectangle.Height \ 2 To 0 Step -1
+                                g.DrawImage(BackgroundBitmap, Point.Empty)
+                                g.DrawImage(SourceBitmap,
+                                        New RectangleF(0, SourceRectangle.Top + i, SourceRectangle.Width, SourceRectangle.Height - 2 * i),
+                                        SourceRectangle, GraphicsUnit.Pixel)
+                                ValueAnimationList.Add(TargetBitmap.Clone)
+                            Next
+                        Case RollAnimationStyles.Fade
+                            Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                            Dim ColorVector As Single()() = {
+                                    New Single() {1, 0, 0, 0, 0},
+                                    New Single() {0, 1, 0, 0, 0},
+                                    New Single() {0, 0, 1, 0, 0},
+                                    New Single() {0, 0, 0, 1, 0},
+                                    New Single() {0, 0, 0, 0, 1}}
+                            Dim ImageAttr As Imaging.ImageAttributes = New Imaging.ImageAttributes
+                            Dim ColorMtrx As Imaging.ColorMatrix = New Imaging.ColorMatrix(ColorVector)
+                            Dim DrawLastImage As Boolean = True
+                            For i As Integer = 1 To 255 Step 5
+                                ColorMtrx.Matrix33 = CSng(i) / 255.0!
+                                ImageAttr.SetColorMatrix(ColorMtrx, Imaging.ColorMatrixFlag.Default, Imaging.ColorAdjustType.Bitmap)
+                                g.DrawImage(BackgroundBitmap, Point.Empty)
+                                g.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                        SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                        GraphicsUnit.Pixel, ImageAttr)
+                                ValueAnimationList.Add(TargetBitmap.Clone)
+                            Next
+                            g.DrawImage(BackgroundBitmap, Point.Empty)
+                            g.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                        SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                        GraphicsUnit.Pixel)
+                            ValueAnimationList.Add(TargetBitmap.Clone)
+                        Case RollAnimationStyles.Spin
+                            Dim SourceRectangle As RectangleF = New RectangleF(0, ValueInvalidationRectangle.Top - ValueRenderingRectangle.Top, ValueInvalidationRectangle.Width, ValueInvalidationRectangle.Height)
+                            Dim ColorVector As Single()() = {
+                                    New Single() {1, 0, 0, 0, 0},
+                                    New Single() {0, 1, 0, 0, 0},
+                                    New Single() {0, 0, 1, 0, 0},
+                                    New Single() {0, 0, 0, 1, 0},
+                                    New Single() {0, 0, 0, 0, 1}}
+                            Dim ImageAttr As Imaging.ImageAttributes = New Imaging.ImageAttributes
+                            Dim ColorMtrx As Imaging.ColorMatrix = New Imaging.ColorMatrix(ColorVector)
+                            Dim m As Drawing2D.Matrix = New Drawing2D.Matrix
+                            Dim MidPoint As PointF = New PointF(SourceRectangle.Left + SourceRectangle.Width / 2.0!, SourceRectangle.Top + SourceRectangle.Height / 2.0!)
+                            SourceBitmap.MakeTransparent(FaceColor)
+                            If OldValue > 0 Then
+                                For i As Integer = 10 To 360 Step 10
+                                    ColorMtrx.Matrix33 = CSng(i) / 360.0!
+                                    ImageAttr.SetColorMatrix(ColorMtrx, Imaging.ColorMatrixFlag.Default, Imaging.ColorAdjustType.Bitmap)
+                                    m.Reset()
+                                    m.RotateAt(i, MidPoint)
+                                    Using g1 As Graphics = Graphics.FromImage(ValueAnimationList(i / 10))
+                                        g1.Transform = m
+                                        g1.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                                     SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                                     GraphicsUnit.Pixel, ImageAttr)
+                                    End Using
+                                Next
+                            Else
+                                Dim gs As Drawing2D.GraphicsState = g.Save
+                                For i As Integer = 190 To 360 Step 10
+                                    g.DrawImage(BackgroundBitmap, Point.Empty)
+                                    ColorMtrx.Matrix33 = CSng(i - 180) / 180.0!
+                                    ImageAttr.SetColorMatrix(ColorMtrx, Imaging.ColorMatrixFlag.Default, Imaging.ColorAdjustType.Bitmap)
+                                    m.Reset()
+                                    m.RotateAt(i, MidPoint)
+                                    g.Transform = m
+                                    g.DrawImage(SourceBitmap, Rectangle.Round(SourceRectangle),
+                                                SourceRectangle.Left, SourceRectangle.Top, SourceRectangle.Width, SourceRectangle.Height,
+                                                GraphicsUnit.Pixel, ImageAttr)
+                                    ValueAnimationList.Add(TargetBitmap.Clone)
+                                Next
+                                g.Restore(gs)
+                            End If
+                    End Select
+                End Using
+            End Using
+        End Using
+        BackgroundBitmap.Dispose()
+        BackgroundBitmap = Nothing
+
+#If DebugAnimation Then
+        Dim idx As Integer = 0
+        For Each bm In ValueAnimationList
+            bm.Save(IO.Path.Combine(Application.StartupPath, "roll" & idx.ToString("n2") & ".bmp"), Imaging.ImageFormat.Bmp)
+            idx += 1
+        Next
+#End If
+
+        RollAnimationCurrent = RollAnimationStyle
+        If OldValue = 0 Then
+            AnimationTimer.Interval = RollAnimationInterval / ValueAnimationList.Count
+        Else
+            AnimationTimer.Interval = RollAnimationInterval / ValueAnimationList.Count
+        End If
+        AnimationTimer.Enabled = True
+    End Sub
+    Private Sub AnimationTimer_Tick(sender As Object, e As EventArgs) Handles AnimationTimer.Tick
+        AnimationTimer.Enabled = False
+        Using g As Graphics = CreateGraphics()
+#If DebugAnimation Then
+            g.DrawRectangle(Pens.White, Rectangle.Round(ValueInvalidationRectangle))
+            g.DrawRectangle(Pens.Cyan, ValueRenderingRectangle)
+#End If
+            g.SetClip(ValueInvalidationRectangle)
+            g.DrawImage(ValueAnimationList(0), ValueRenderingRectangle)
+            ValueAnimationList.RemoveAt(0)
+        End Using
+        If ValueAnimationList.Any Then
+            AnimationTimer.Enabled = True
+        Else
+            RollAnimationCurrent = RollAnimationStyles.None
+        End If
     End Sub
 
     Private Sub Paint4Sides(g As Graphics)
@@ -289,16 +586,12 @@ Public Class DieControl
     End Function
     Private Sub SetValueRect4(LargestSize As SizeF)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        BoundingRectangle.Top + (GetHeightDelta4() + BoundingRectangle.Height - LargestSize.Height) / 2.0!,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    BoundingRectangle.Top + (GetHeightDelta4() + BoundingRectangle.Height - LargestSize.Height + InvalidationHeight) / 2.0!,
-                                                    LargestSize.Width, LargestSize.Height - InvalidationHeight)
+                                                    BoundingRectangle.Top + (GetHeightDelta4() + BoundingRectangle.Height - ValueFontAscent) / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontAscent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 ValueInvalidationRectangle.Top - (LargestSize.Height - ValueFontAscent) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub Paint6Sides(g As Graphics)
@@ -389,16 +682,12 @@ Public Class DieControl
     End Function
     Private Sub SetValueRect6(LargestSize As SizeF)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        BoundingRectangle.Top + (GetRadius6() - LargestSize.Height) / 2.0!,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    BoundingRectangle.Top + (GetRadius6() - LargestSize.Height + InvalidationHeight) / 2.0!,
-                                                    LargestSize.Width, LargestSize.Height - InvalidationHeight)
+                                                    BoundingRectangle.Top + GetRadius6() / 2.0! - ValueFontAscent / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontAscent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 ValueInvalidationRectangle.Top - (LargestSize.Height - ValueFontAscent) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub Paint8Sides(g As Graphics)
@@ -466,16 +755,12 @@ Public Class DieControl
     End Sub
     Private Sub SetValueRect8(LargestSize As SizeF)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height + InvalidationHeight) / 2.0!,
-                                                    LargestSize.Width, LargestSize.Height - InvalidationHeight)
+                                                    BoundingRectangle.Top + (BoundingRectangle.Height - ValueFontAscent) / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontAscent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub Paint10Sides(g As Graphics)
@@ -539,30 +824,21 @@ Public Class DieControl
     Private Function GetRadius10() As Single
         Return GetBoundingRectangle.Width / 2.0!
     End Function
-    Private Function GetRadius_2_10() As Single
-        Return 0.9! * GetBoundingRectangle.Width / 2.0!
-    End Function
     Private Function GetMidPoint10() As PointF
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
         Dim radius As Single = GetRadius10()
         Return New PointF(BoundingRectangle.Left + radius, BoundingRectangle.Top + radius)
     End Function
     Private Sub SetValueRect10(LargestSize As SizeF)
-        LargestSize = New SizeF(LargestSize.Width + 1.0!, LargestSize.Height + 1.0!)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
         Dim radius As Single = GetRadius10()
         Dim MidPoint As PointF = GetMidPoint10()
-        Dim radius2 As Single = GetRadius_2_10()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        MidPoint.Y + radius2 - LargestSize.Height,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    MidPoint.Y + radius2 - LargestSize.Height,
-                                                    LargestSize.Width, LargestSize.Height - InvalidationHeight)
+                                                    MidPoint.Y + (radius - LargestSize.Height + ValueFontAscent) / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontDescent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 ValueInvalidationRectangle.Top - (LargestSize.Height - ValueFontAscent) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub Paint12Sides(g As Graphics)
@@ -645,18 +921,13 @@ Public Class DieControl
         End If
     End Sub
     Private Sub SetValueRect12(LargestSize As SizeF)
-        LargestSize = New SizeF(LargestSize.Width + 1.0!, LargestSize.Height + 1.0!)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    BoundingRectangle.Top + (BoundingRectangle.Width - LargestSize.Width) / 2.0! - ValueFontDescent,
-                                                    LargestSize.Width, LargestSize.Height - InvalidationHeight)
+                                                    BoundingRectangle.Top + (BoundingRectangle.Height - ValueFontAscent) / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontDescent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub Paint20Sides(g As Graphics)
@@ -765,25 +1036,58 @@ Public Class DieControl
         End If
     End Sub
     Private Sub SetValueRect20(LargestSize As SizeF)
-        LargestSize = New SizeF(LargestSize.Width + 1.0!, LargestSize.Height + 1.0!)
         Dim BoundingRectangle As RectangleF = GetBoundingRectangle()
-        ValueRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                        BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
-                                        LargestSize.Width, LargestSize.Height)
-        Dim InvalidationHeight As Single = ValueFontAscent + ValueFontDescent
         ValueInvalidationRectangle = New RectangleF(BoundingRectangle.Left + (BoundingRectangle.Width - LargestSize.Width) / 2.0!,
-                                                    BoundingRectangle.Top + (BoundingRectangle.Width - LargestSize.Width) / 2.0! - ValueFontDescent,
-                                                    LargestSize.Width, LargestSize.Height - ValueFontAscent)
+                                                    BoundingRectangle.Top + (BoundingRectangle.Height - ValueFontAscent) / 2.0!,
+                                                    LargestSize.Width, ValueFontAscent)
         ValueRenderingRectangle = Rectangle.Round(New RectangleF(ValueInvalidationRectangle.Left,
-                                                                 ValueInvalidationRectangle.Top - ValueFontDescent,
-                                                                 ValueInvalidationRectangle.Width, LargestSize.Height))
+                                                                 BoundingRectangle.Top + (BoundingRectangle.Height - LargestSize.Height) / 2.0!,
+                                                                 LargestSize.Width, LargestSize.Height))
     End Sub
 
     Private Sub DieControl_FontChanged(sender As Object, e As EventArgs) Handles Me.FontChanged
-
+        MeasureFont()
+        Invalidate()
     End Sub
 
     Private Sub DieControl_SizeChanged(sender As Object, e As EventArgs) Handles Me.SizeChanged
-
+        Invalidate()
     End Sub
+
+    Public Function Save(FileName As String) As Boolean
+        Try
+            Dim Format As Imaging.ImageFormat
+            Select Case IO.Path.GetExtension(FileName).ToLower
+                Case ".bmp"
+                    Format = Imaging.ImageFormat.Bmp
+                Case ".jpg", ".jpeg"
+                    Format = Imaging.ImageFormat.Jpeg
+                Case ".png"
+                    Format = Imaging.ImageFormat.Png
+                Case ".gif"
+                    Format = Imaging.ImageFormat.Gif
+                Case Else
+                    Format = Imaging.ImageFormat.Bmp
+            End Select
+
+            Using bm As Bitmap = New Bitmap(Width, Height, Imaging.PixelFormat.Format32bppArgb)
+                Using g As Graphics = Graphics.FromImage(bm)
+                    If BackColor.ToArgb = Color.Transparent.ToArgb Then
+                        bm.MakeTransparent()
+                    Else
+                        Using BackBrush As Brush = New SolidBrush(BackColor)
+                            g.FillRectangle(BackBrush, New Rectangle(Point.Empty, Size))
+                        End Using
+                    End If
+                    DoPaint(g)
+                End Using
+                bm.Save(FileName, Format)
+            End Using
+        Catch ex As Exception
+            MsgBox($"Save {FileName} failed: {ex.Message}")
+            Return False
+        End Try
+
+        Return True
+    End Function
 End Class

@@ -22,15 +22,22 @@ Partial Class DieControl
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
+        Me.AnimationTimer = New System.Windows.Forms.Timer(Me.components)
         Me.SuspendLayout()
+        '
+        'AnimationTimer
+        '
         '
         'DieControl
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 15.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.DoubleBuffered = True
         Me.Name = "DieControl"
         Me.ResumeLayout(False)
 
     End Sub
 
+    Friend WithEvents AnimationTimer As Timer
 End Class
